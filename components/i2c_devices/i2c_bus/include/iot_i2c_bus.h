@@ -15,6 +15,19 @@
 #define _IOT_I2C_BUS_H_
 #include "driver/i2c.h"
 
+#define I2C_BUS_SPEED_STANDARD   (100000UL)
+#define I2C_BUS_SPEED_FAST       (400000UL)
+#define I2C_BUS_SPEED_HS        (3200000UL)
+
+#define I2C_BUS_CONFIG_MASTER(_sda_pin, _scl_pin, _pull_up_enable, _clk_speed) { \
+    .mode             = I2C_MODE_MASTER, \
+    .sda_io_num       = (gpio_num_t) (_sda_pin), \
+    .scl_io_num       = (gpio_num_t) (_scl_pin), \
+    .sda_pullup_en    = (gpio_pullup_t) (_pull_up_enable), \
+    .scl_pullup_en    = (gpio_pullup_t) (_pull_up_enable), \
+    .master.clk_speed = (uint32_t) (_clk_speed), \
+}
+
 #ifdef __cplusplus
 extern "C"
 {
