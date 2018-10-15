@@ -69,3 +69,10 @@ esp_err_t iot_i2c_bus_cmd_begin(i2c_bus_handle_t bus, i2c_cmd_handle_t cmd, port
     i2c_bus_t* i2c_bus = (i2c_bus_t*) bus;
     return i2c_master_cmd_begin(i2c_bus->i2c_port, cmd, ticks_to_wait);
 }
+
+i2c_port_t iot_i2c_bus_get_port(i2c_bus_handle_t bus)
+{
+    I2C_BUS_CHECK(bus != NULL, "Handle error", -1);
+    i2c_bus_t *i2c_bus = (i2c_bus_t*) bus;
+    return i2c_bus->i2c_port;
+}

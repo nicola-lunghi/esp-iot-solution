@@ -43,3 +43,8 @@ i2c_bus_handle_t CI2CBus::get_bus_handle()
 {
     return m_i2c_bus_handle;
 }
+
+i2c_port_t CI2CBus::get_i2c_port()
+{
+    return iot_i2c_bus_get_port(m_i2c_bus_handle);
+}

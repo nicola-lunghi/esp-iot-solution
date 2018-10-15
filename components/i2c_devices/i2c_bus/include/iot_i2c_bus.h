@@ -57,6 +57,17 @@ esp_err_t iot_i2c_bus_delete(i2c_bus_handle_t bus);
  */
 esp_err_t iot_i2c_bus_cmd_begin(i2c_bus_handle_t bus, i2c_cmd_handle_t cmd,
 portBASE_TYPE ticks_to_wait);
+
+/**
+ * @brief get the i2c port used by the bus
+ *
+ * @param bus I2C bus handle
+ *
+ * @return
+ *     - i2c port number or -1 of there's an error
+ */
+i2c_port_t iot_i2c_bus_get_port(i2c_bus_handle_t bus);
+
 #ifdef __cplusplus
 }
 #endif
@@ -111,6 +122,12 @@ public:
      * @return bus handle
      */
     i2c_bus_handle_t get_bus_handle();
+
+    /**
+     * @brief Get the i2c port used by the bus
+     * @return i2c_port
+     */
+    i2c_port_t get_i2c_port();
 };
 #endif
 
