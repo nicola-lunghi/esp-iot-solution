@@ -25,7 +25,7 @@ CBme280::CBme280(CI2CBus *p_i2c_bus, uint8_t addr)
 
 CBme280::~CBme280()
 {
-    iot_bme280_delete(m_dev_handle, false);
+    iot_bme280_delete(m_dev_handle);
     m_dev_handle = NULL;
 }
 
@@ -78,4 +78,3 @@ float CBme280::calculates_pressure(float altitude, float atmospheric)
 {
     return iot_bme280_calculates_pressure(m_dev_handle, altitude, atmospheric);
 }
-

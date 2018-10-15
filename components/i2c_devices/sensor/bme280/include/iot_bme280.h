@@ -210,13 +210,12 @@ bme280_handle_t iot_bme280_create(i2c_bus_handle_t bus, uint16_t dev_addr);
  * @brief   delete bme280 handle_t
  *
  * @param   dev object handle of bme280
- * @param   whether delete i2c bus
  *
  * @return
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  */
-esp_err_t iot_bme280_delete(bme280_handle_t dev, bool del_bus);
+esp_err_t iot_bme280_delete(bme280_handle_t dev);
 
 /**
  * @brief   Write a data on addr
