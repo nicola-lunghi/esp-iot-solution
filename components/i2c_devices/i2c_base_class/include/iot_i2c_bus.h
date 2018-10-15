@@ -144,5 +144,5 @@ public:
 };
 #endif
 
-#endif
+#endif /* _IOT_I2C_BUS_H_ */
 

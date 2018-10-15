@@ -76,3 +76,4 @@ i2c_port_t iot_i2c_bus_get_port(i2c_bus_handle_t bus)
     i2c_bus_t *i2c_bus = (i2c_bus_t*) bus;
     return i2c_bus->i2c_port;
 }
+
