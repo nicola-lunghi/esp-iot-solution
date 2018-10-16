@@ -31,7 +31,7 @@ esp_err_t CApds9960::enable_device(bool en)
 
 CApds9960::~CApds9960()
 {
-    iot_apds9960_delete(m_sensor_handle, false);
+    iot_apds9960_delete(m_sensor_handle);
     m_sensor_handle = NULL;
 }
 

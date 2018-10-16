@@ -1006,13 +1006,12 @@ apds9960_handle_t iot_apds9960_create(i2c_bus_handle_t bus,
  * @brief Delete and release a sensor object
  *
  * @param sensor object handle of apds9960
- * @param del_bus Whether to delete the I2C bus
  *
  * @return
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  */
-esp_err_t iot_apds9960_delete(apds9960_handle_t sensor, bool del_bus);
+esp_err_t iot_apds9960_delete(apds9960_handle_t sensor);
 
 #ifdef __cplusplus
 }

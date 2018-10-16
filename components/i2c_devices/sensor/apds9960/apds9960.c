@@ -13,14 +13,14 @@
 // limitations under the License.
 #include <stdio.h>
 #include "driver/i2c.h"
+#include "iot_i2c_bus.h"
+#include "iot_i2c_device.h"
 #include "iot_apds9960.h"
 
 #define APDS9960_TIMEOUT_MS_DEFAULT   (1000)
 typedef struct
 {
-    i2c_bus_handle_t bus;
-    uint16_t dev_addr;
-    uint32_t timeout;
+    i2c_device_handle_t i2c_device;
     apds9960_control_t _control_t; /*< config control register>*/
     apds9960_enable_t _enable_t;   /*< config enable register>*/
 
@@ -169,22 +169,13 @@ esp_err_t iot_apds9960_write_byte(apds9960_handle_t sensor, uint8_t reg_addr, ui
 esp_err_t iot_apds9960_write(apds9960_handle_t sensor, uint8_t addr, uint8_t *buf, uint8_t len)
 {
     apds9960_dev_t* sens = (apds9960_dev_t*) sensor;
-    esp_err_t ret;
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (sens->dev_addr << 1) | WRITE_BIT, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, addr, ACK_CHECK_EN);
-    i2c_master_write(cmd, buf, len, ACK_CHECK_EN);
-    ret = iot_i2c_bus_cmd_begin(sens->bus, cmd, sens->timeout / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
-    return ret;
+    return iot_i2c_device_write(sens->i2c_device, addr, len, buf);
 }
 
 esp_err_t iot_apds9960_set_timeout(apds9960_handle_t sensor, uint32_t tout_ms)
 {
     apds9960_dev_t* sens = (apds9960_dev_t*) sensor;
-    sens->timeout = tout_ms;
-    return ESP_OK;
+    return iot_i2c_device_set_timeout(sens->i2c_device, tout_ms);
 }
 
 esp_err_t iot_apds9960_read_byte(apds9960_handle_t sensor, uint8_t reg, uint8_t *data)
@@ -195,30 +186,7 @@ esp_err_t iot_apds9960_read_byte(apds9960_handle_t sensor, uint8_t reg, uint8_t 
 esp_err_t iot_apds9960_read(apds9960_handle_t sensor, uint8_t reg_addr, uint8_t *buf, uint8_t len)
 {
     apds9960_dev_t* sens = (apds9960_dev_t*) sensor;
-    esp_err_t ret;
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (sens->dev_addr << 1) | WRITE_BIT, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, reg_addr, ACK_CHECK_EN);
-    i2c_master_stop(cmd);
-    ret = iot_i2c_bus_cmd_begin(sens->bus, cmd, sens->timeout / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
-    if (ret == ESP_FAIL) {
-        return ret;
-    }
-    cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (sens->dev_addr << 1) | READ_BIT, ACK_CHECK_EN);
-    if (len > 1) {
-        i2c_master_read(cmd, buf, len - 1, ACK_VAL);
-        i2c_master_read_byte(cmd, buf + len - 1, NACK_VAL);
-    } else {
-        i2c_master_read_byte(cmd, buf, NACK_VAL);
-    }
-    i2c_master_stop(cmd);
-    ret = iot_i2c_bus_cmd_begin(sens->bus, cmd, sens->timeout / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
-    return ret;
+    return iot_i2c_device_read(sens->i2c_device, reg_addr, len, buf);
 }
 
 esp_err_t iot_apds9960_get_deviceid(apds9960_handle_t sensor, uint8_t* deviceid)
@@ -544,15 +512,7 @@ bool iot_apds9960_get_proximity_interrupt(apds9960_handle_t sensor)
 
 esp_err_t iot_apds9960_clear_interrupt(apds9960_handle_t sensor)
 {
-    esp_err_t ret = 0;
-    apds9960_dev_t* sens = (apds9960_dev_t*) sensor;
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (sens->dev_addr << 1) | WRITE_BIT, ACK_CHECK_EN);
-    i2c_master_write_byte(cmd, APDS9960_AICLEAR, ACK_CHECK_EN);
-    ret = iot_i2c_bus_cmd_begin(sens->bus, cmd, sens->timeout / portTICK_RATE_MS);
-    i2c_cmd_link_delete(cmd);
-    return ret;
+    return iot_apds9960_write(sensor, APDS9960_AICLEAR, NULL, 0);
 }
 
 esp_err_t iot_apds9960_enable(apds9960_handle_t sensor, bool en)
@@ -772,19 +732,19 @@ esp_err_t iot_apds9960_set_gesture_exit_thresh(apds9960_handle_t sensor, uint8_t
 apds9960_handle_t iot_apds9960_create(i2c_bus_handle_t bus, uint16_t dev_addr)
 {
     apds9960_dev_t* sensor = (apds9960_dev_t*) calloc(1, sizeof(apds9960_dev_t));
-    sensor->bus = bus;
-    sensor->dev_addr = dev_addr;
-    sensor->timeout = APDS9960_TIMEOUT_MS_DEFAULT;
+    sensor->i2c_device = iot_i2c_device_create(bus, dev_addr,
+                                               APDS9960_TIMEOUT_MS_DEFAULT);
     return (apds9960_handle_t) sensor;
 }
 
-esp_err_t iot_apds9960_delete(apds9960_handle_t sensor, bool del_bus)
+esp_err_t iot_apds9960_delete(apds9960_handle_t sensor)
 {
     apds9960_dev_t* sens = (apds9960_dev_t*) sensor;
-    if (del_bus) {
-        iot_i2c_bus_delete(sens->bus);
-        sens->bus = NULL;
-    }
+    esp_err_t ret = iot_i2c_device_delete(sens->i2c_device);
+
+    if(ret != ESP_OK)
+        return ret;
+
     free(sens);
     return ESP_OK;
 }
